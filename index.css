@@ -1,0 +1,11 @@
+body
+        {
+            background-image:url('thumb.png');
+            background-color: black;
+        }
+        .image{margin: 0 0 0 30px;}
+        .text{margin: 30px 30px;}
+        a:link {text-decoration: none; color:black;}
+        a:visited {text-decoration: none; color: black;}
+        a:hover {text-decoration: none; color: red;}
+        a:active {text-decoration: none; color: purple;}
