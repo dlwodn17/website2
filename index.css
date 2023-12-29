@@ -2,6 +2,7 @@ body
         {
             background-image:url('thumb.png');
             background-color: black;
+            font-family: 'suite_medium';
         }
         .image{margin: 0 0 0 30px;}
         .text{margin: 30px 30px;}
@@ -9,3 +10,7 @@ body
         a:visited {text-decoration: none; color: black;}
         a:hover {text-decoration: none; color: red;}
         a:active {text-decoration: none; color: purple;}
+@font-face {
+    font-family: "suite_medium";
+    src: url(font/suite_medium.ttf);
+}
