@@ -3,9 +3,10 @@ body
             background-image:url('thumb.png');
             background-color: black;
             font-family: 'suite_medium';
+            
         }
-        .image{margin: 0 0 0 30px;}
-        .text{margin: 30px 30px;}
+        /*.image{margin: 0 0 0 30px;}
+        .text{margin: 30px 30px;}*/
         a:link {text-decoration: none; color:black;}
         a:visited {text-decoration: none; color: black;}
         a:hover {text-decoration: none; color: red;}
