@@ -15,3 +15,32 @@ body
     font-family: "suite_medium";
     src: url(font/suite_medium.ttf);
 }
+.sidebar {
+    width: 300px;
+    height: 100vh;
+    background-color: whitesmoke;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.sidebar nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar nav li {
+    margin: 0;
+}
+
+.sidebar nav a {
+    text-decoration: none;
+    color: black;
+    display: block;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.sidebar nav a:hover {
+    background-color: #f0f0f0;
+}
