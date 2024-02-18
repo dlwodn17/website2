@@ -1,3 +1,5 @@
+@media (min-width:768px) {}
+
 body
         {
             background-image:url('thumb.png');
@@ -17,7 +19,7 @@ body
 }
 
 .sidebar {
-    width: 300px;
+    width: 18rem;
     height: 100vh;
     background-color: whitesmoke;
     position: fixed;
