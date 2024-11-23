@@ -32,11 +32,32 @@
     }
 
     .horizontal-bar a:hover {
-      border-bottom: 2px solid #007BFF;
+      border-bottom: 2px solid #361278;
       background-color: #f0f0f0;
       border-radius: 5px;
     }
+    body {
+      margin: 0;
+      padding: 0;
+    }
 
+           
+
+    .content {
+      margin-top: 70px; /* 가로 바 높이 + 여유 공간 */
+      text-align: center;
+      color: whitesmoke;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      text-align: center;
+      font-family: 'suite_light';
+      background-color: whitesmoke; /* 배경색 추가로 가독성 향상 */
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    }
 }
 
 
@@ -52,41 +73,45 @@ body
         .text{margin: 30px 30px;}*/
         a:link {text-decoration: none; color:black;}
         a:visited {text-decoration: none; color: black;}
-        a:hover {text-decoration: none; color: red;}
-        a:active {text-decoration: none; color: purple;}
+        a:hover {text-decoration: none; color: #361278;}
+        a:active {text-decoration: none; color: #361278;}
+        
 @font-face {
     font-family: "suite_medium";
     src: url(font/suite_medium.ttf);
 }
 
-.sidebar {
+@media (min-width:769) {
+  .sidebar {
     width: 300px;
     height: 100vh;
     background-color: whitesmoke;
     position: fixed;
     top: 0;
     left: 0;
-}
+  }
 
-.sidebar nav ul {
-    list-style: none;
-    padding: 0;
-}
+  .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+  }
+  
+  .sidebar nav li {
+      margin: 0;
+  }
+  
+  .sidebar nav a {
+      text-decoration: none;
+      color: black;
+      display: block;
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+  }
+  
+  .sidebar nav a:hover {
+      background-color: #F0F0F0;
+  }
 
-.sidebar nav li {
-    margin: 0;
-}
-
-.sidebar nav a {
-    text-decoration: none;
-    color: black;
-    display: block;
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-}
-
-.sidebar nav a:hover {
-    background-color: #F0F0F0;
 }
 
 .footer {
@@ -96,4 +121,4 @@ body
     text-align: center;
     font-family: 'suite_light';
     font-size: 13px;
-}
+  }
