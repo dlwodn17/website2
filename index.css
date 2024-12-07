@@ -82,7 +82,7 @@ body
 }
 
 @media (min-width:769) {
-  .sidebar {
+  .horizontal-bar {
     width: 300px;
     height: 100vh;
     background-color: whitesmoke;
@@ -91,16 +91,16 @@ body
     left: 0;
   }
 
-  .sidebar nav ul {
+  .horizontal-bar nav ul {
       list-style: none;
       padding: 0;
   }
   
-  .sidebar nav li {
+  .horizontal-bar nav li {
       margin: 0;
   }
   
-  .sidebar nav a {
+  .horizontal-bar nav a {
       text-decoration: none;
       color: black;
       display: block;
@@ -108,7 +108,7 @@ body
       border-bottom: 1px solid #ccc;
   }
   
-  .sidebar nav a:hover {
+  .horizontal-bar nav a:hover {
       background-color: #F0F0F0;
   }
 
