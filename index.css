@@ -81,7 +81,7 @@ body
     src: url(font/suite_medium.ttf);
 }
 
-@media (min-width:769) {
+@media (min-width:769px) {
   .horizontal-bar {
     width: 300px;
     height: 100vh;
