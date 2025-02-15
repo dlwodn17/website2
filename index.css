@@ -90,7 +90,10 @@ body
     top: 0;
     left: 0;
   }
-
+  .content{
+    margin-left:300px;
+    padding:20px;
+  } /*content의 왼쪽에 margin 설정하여 사이드바에 가리지 않도록 함*/
   .horizontal-bar nav ul {
       list-style: none;
       padding: 0;
