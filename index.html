@@ -21,51 +21,19 @@
     <div class="horizontal-bar">
         <nav>
             <ul>
-                <li><a href="#home" onclick="navigateTo('home')">Home</a></li>
-                <li><a href="#musike" onclick="navigateTo('musike')">Musike</a></li>
-                <li><a href="#techne" onclick="navigateTo('techne')">Techne</a></li>
-                <li><a href="#sns" onclick="navigateTo('sns')">SNS</a></li>
-                <li><a href="#info" onclick="navigateTo('info')">Info</a></li>
+                <li><a href="home.html">Home</a></li>
+                <li><a href="musike.html">Musike</a></li>
+                <li><a href="techne.html">Techne</a></li>
+                <li><a href="SNS.html">SNS</a></li>
+                <li><a href="info.html">Info</a></li>
             </ul>
         </nav>
     </div>
     
     <!-- 동적으로 변경될 콘텐츠 영역 -->
-    <div class="content" id="content">
+    <div class="content">
         <h1>GyeonChilll's Room</h1>
         <h3>Welcome! 이재우의 홈페이지입니다.</h3>
     </div>
-    
-    <script>
-        // 페이지별 콘텐츠 정의
-        const pages = {
-            home: { content: "<h1>Home</h1>" },
-            musike: { content: "<h1>Musike</h1>" },
-            techne: { content: "<h1>Techne</h1>" },
-            sns: { content: "<h1>SNS</h1>" },
-            info: { content: "<h1>Info</h1>" }
-        };
-        
-        // 페이지 이동 함수 (동적 콘텐츠 변경 및 브라우저 히스토리 업데이트)
-        function navigateTo(page) {
-            if (pages[page]) {
-                document.getElementById("content").innerHTML = pages[page].content;
-                history.pushState({ page: page }, "", `#${page}`);
-            }
-        }
-        
-        // 뒤로가기/앞으로가기 시 페이지 유지
-        window.onpopstate = function(event) {
-            if (event.state && event.state.page) {
-                navigateTo(event.state.page);
-            }
-        };
-        
-        // 페이지 로드 시 URL 해시값을 기준으로 콘텐츠 설정
-        window.onload = function() {
-            const page = location.hash.replace("#", "") || "home";
-            navigateTo(page);
-        };
-    </script>
 </body>
 </html>
