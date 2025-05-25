@@ -67,7 +67,7 @@
 body
         {
             background-image:url('thumb.png');
-            background-color: black;
+            background-color: #1D1E23; /* 흑색 */
             font-family: 'suite_medium';
             
         }
