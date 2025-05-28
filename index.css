@@ -34,7 +34,6 @@
     }
 
     .horizontal-bar a:hover {
-      border-bottom: 2px solid #361278;
       background-color: #f0f0f0;
       border-radius: 5px;
     }
