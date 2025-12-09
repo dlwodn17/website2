@@ -70,6 +70,24 @@ body
             font-family: 'suite_medium';
             
         }
+/* 멜론 링크 전용 스타일 - 링크 텍스트만 작성하면 아이콘이 자동 표시됨 */
+.melon-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: whitesmoke;
+}
+.melon-link::before {
+  content: '';
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  background: url('image/melon.png') no-repeat center center / contain;
+}
+.melon-link:link,
+.melon-link:visited {
+  color: whitesmoke;
+}
         /*.image{margin: 0 0 0 30px;}
         .text{margin: 30px 30px;}*/
         a:link {text-decoration: none; color:black;}
