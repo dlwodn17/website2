@@ -75,7 +75,7 @@ body
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: whitesmoke;
+  color: whitesmoke !important;
 }
 .melon-link::before {
   content: '';
@@ -86,7 +86,12 @@ body
 }
 .melon-link:link,
 .melon-link:visited {
-  color: whitesmoke;
+  color: whitesmoke !important;
+}
+.melon-link:hover,
+.melon-link:active,
+.melon-link:focus {
+  color: whitesmoke !important;
 }
         /*.image{margin: 0 0 0 30px;}
         .text{margin: 30px 30px;}*/
