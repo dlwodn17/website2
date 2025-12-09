@@ -16,20 +16,14 @@
         </title>
         <link rel="icon" href="image/home_logo2.png">
         <link rel="stylesheet" href="index.css">
+        <script src="navigation.js"></script>
     </head>
     <body>
-        <div class="horizontal-bar">
-            <!-- 100vh로 설정하면 꽉 채울 수 있다. -->
-            <nav>
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="Musike_page.html">Musike</a></li>
-                    <li><a href="Techne_page.html">Techne</a></li>
-                    <li><a href="SNS.html">SNS</a></li>
-                    <li style="background-color: rgb(230, 230, 230);"><a href="Info.html">Info</a></li>
-                </ul>
-            </nav>
-        </div>
+        <script>
+            // 네비게이션 바 생성 및 삽입
+            const nav = new NavigationBar('Info.html');
+            nav.insertToBody();
+        </script>
         <div class="content">
             <h1>GyeonChilll's Room</h1>        
           <br>
