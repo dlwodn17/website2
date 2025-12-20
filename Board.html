@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="index.css">
     <script src="navigation.js"></script>
     
+    <!-- Cloudflare Turnstile -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import {
@@ -114,6 +117,10 @@
         .form-group textarea {
             min-height: 100px;
             resize: vertical;
+        }
+        
+        .cf-turnstile {
+            margin: 10px 0;
         }
         
         .submit-btn {
@@ -269,6 +276,11 @@
                     <div class="form-group">
                         <label for="content">내용</label>
                         <textarea id="content" name="content" placeholder="글 내용을 입력하세요" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <!-- Cloudflare Turnstile 위젯 -->
+                        <!-- Site Key를 Cloudflare 대시보드에서 받아서 아래 YOUR_SITE_KEY를 교체하세요 -->
+                        <div class="cf-turnstile" data-sitekey="0x4AAAAAACHwixAsFsWEp5z3" data-theme="auto"></div>
                     </div>
                     <button type="submit" class="submit-btn">글 작성</button>
                 </form>
@@ -457,6 +469,13 @@
             const title = document.getElementById('title').value.trim();
             const content = document.getElementById('content').value.trim();
             
+            // Turnstile 토큰 확인
+            const turnstileResponse = document.querySelector('input[name="cf-turnstile-response"]');
+            if (!turnstileResponse || !turnstileResponse.value) {
+                showError('보안 검증을 완료해주세요.');
+                return;
+            }
+            
             if (author && title && content) {
                 const submitBtn = this.querySelector('.submit-btn');
                 const originalText = submitBtn.textContent;
@@ -465,8 +484,11 @@
                 
                 await addPost(author, title, content);
                 
-                // 폼 초기화
+                // 폼 초기화 및 Turnstile 리셋
                 document.getElementById('postForm').reset();
+                if (window.turnstile) {
+                    window.turnstile.reset();
+                }
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
                 
