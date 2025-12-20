@@ -8,6 +8,54 @@
     <link rel="stylesheet" href="index.css">
     <script src="navigation.js"></script>
     
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // ============================================
+        // Firebase 설정 - 여기에 본인의 Firebase 설정을 입력하세요
+        // Firebase 콘솔(https://console.firebase.google.com)에서 프로젝트를 생성하고
+        // 프로젝트 설정 > 일반 > 내 앱 > 웹 앱에서 설정 정보를 복사해 붙여넣으세요.
+        // 자세한 설정 방법은 FIREBASE_SETUP.md 파일을 참고하세요.
+        // ============================================
+        import { initializeApp } from "firebase/app";
+        import { getFirestore } from "firebase/firestore";
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJxwZOo07cM-M2uO45q0jGTbEobIRL8Y4",
+            authDomain: "gyeonchill-s-room.firebaseapp.com",
+            projectId: "gyeonchill-s-room",
+            storageBucket: "gyeonchill-s-room.firebasestorage.app",
+            messagingSenderId: "31487965786",
+            appId: "1:31487965786:web:bffd8fff97eccbddee3663",
+            measurementId: "G-BLMNC5NFP4"
+        };
+        
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        
+        try {
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            
+            // 전역 변수로 export
+            window.firebaseDB = db;
+            window.firebaseCollection = collection;
+            window.firebaseAddDoc = addDoc;
+            window.firebaseGetDocs = getDocs;
+            window.firebaseDeleteDoc = deleteDoc;
+            window.firebaseDoc = doc;
+            window.firebaseQuery = query;
+            window.firebaseOrderBy = orderBy;
+            window.firebaseOnSnapshot = onSnapshot;
+            window.firebaseInitialized = true;
+        } catch (error) {
+            console.error('Firebase 초기화 오류:', error);
+            window.firebaseInitialized = false;
+        }
+    </script>
+    
     <!-- Google Analytics 태그 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XWWBCPB03C"></script>
     <script>
@@ -152,6 +200,31 @@
             font-size: 16px;
         }
         
+        .loading-message {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 20px;
+            font-size: 14px;
+        }
+        
+        .error-message {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(220, 53, 69, 0.5);
+        }
+        
+        .config-notice {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 193, 7, 0.5);
+        }
+        
         @media (max-width: 768px) {
             .board-container {
                 padding: 10px;
@@ -205,57 +278,47 @@
             <!-- 게시글 목록 -->
             <div class="posts-container">
                 <h2 style="color: whitesmoke; margin-bottom: 20px;">게시글 목록</h2>
-                <div id="postsList"></div>
+                <div id="errorMessage"></div>
+                <div id="postsList">
+                    <div class="loading-message">게시글을 불러오는 중...</div>
+                </div>
             </div>
         </div>
     </div>
     
     <script>
-        // 게시글 데이터를 로컬 스토리지에서 관리
-        const STORAGE_KEY = 'board_posts';
         
-        // 게시글 목록 가져오기
-        function getPosts() {
-            const posts = localStorage.getItem(STORAGE_KEY);
-            return posts ? JSON.parse(posts) : [];
+        // 에러 메시지 표시
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.innerHTML = `<div class="error-message">${escapeHtml(message)}</div>`;
         }
         
-        // 게시글 목록 저장하기
-        function savePosts(posts) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+        // 설정 안내 메시지 표시
+        function showConfigNotice() {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.innerHTML = `
+                <div class="config-notice">
+                    <strong>⚠️ Firebase 설정이 필요합니다</strong><br>
+                    Board.html 파일의 Firebase 설정 부분에 본인의 Firebase 프로젝트 정보를 입력해주세요.<br>
+                    Firebase 콘솔(https://console.firebase.google.com)에서 프로젝트를 생성하고 설정 정보를 복사해 붙여넣으세요.
+                </div>
+            `;
         }
         
-        // 게시글 추가하기
-        function addPost(author, title, content) {
-            const posts = getPosts();
-            const newPost = {
-                id: Date.now(), // 고유 ID 생성
-                author: author,
-                title: title,
-                content: content,
-                date: new Date().toLocaleString('ko-KR')
-            };
-            posts.unshift(newPost); // 최신 글이 위에 오도록
-            savePosts(posts);
-            renderPosts();
-        }
-        
-        // 게시글 삭제하기
-        function deletePost(id) {
-            if (confirm('정말 삭제하시겠습니까?')) {
-                const posts = getPosts();
-                const filteredPosts = posts.filter(post => post.id !== id);
-                savePosts(filteredPosts);
-                renderPosts();
-            }
+        // XSS 방지를 위한 HTML 이스케이프
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
         
         // 게시글 목록 렌더링
-        function renderPosts() {
-            const posts = getPosts();
+        function renderPosts(posts) {
             const postsList = document.getElementById('postsList');
             
-            if (posts.length === 0) {
+            if (!posts || posts.length === 0) {
                 postsList.innerHTML = '<div class="empty-message">아직 작성된 글이 없습니다. 첫 번째 글을 작성해보세요!</div>';
                 return;
             }
@@ -267,22 +330,128 @@
                             <h3 class="post-title">${escapeHtml(post.title)}</h3>
                             <div class="post-meta">작성자: ${escapeHtml(post.author)} | 작성일: ${post.date}</div>
                         </div>
-                        <button class="delete-btn" onclick="deletePost(${post.id})">삭제</button>
+                        <button class="delete-btn" data-post-id="${escapeHtml(post.id)}">삭제</button>
                     </div>
                     <div class="post-content">${escapeHtml(post.content)}</div>
                 </div>
             `).join('');
+            
+            // 삭제 버튼에 이벤트 리스너 추가 (이벤트 위임 사용)
+            attachDeleteListeners();
         }
         
-        // XSS 방지를 위한 HTML 이스케이프
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        // Firebase에서 게시글 가져오기
+        async function loadPosts() {
+            try {
+                if (!window.firebaseDB) {
+                    showConfigNotice();
+                    document.getElementById('postsList').innerHTML = '<div class="empty-message">Firebase가 초기화되지 않았습니다.</div>';
+                    return;
+                }
+                
+                const postsRef = window.firebaseCollection(window.firebaseDB, 'posts');
+                const q = window.firebaseQuery(postsRef, window.firebaseOrderBy('timestamp', 'desc'));
+                const querySnapshot = await window.firebaseGetDocs(q);
+                
+                const posts = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    posts.push({
+                        id: doc.id,
+                        author: data.author,
+                        title: data.title,
+                        content: data.content,
+                        date: data.date || new Date(data.timestamp?.toDate()).toLocaleString('ko-KR')
+                    });
+                });
+                
+                renderPosts(posts);
+                document.getElementById('errorMessage').innerHTML = '';
+            } catch (error) {
+                console.error('게시글 로드 오류:', error);
+                showError('게시글을 불러오는 중 오류가 발생했습니다: ' + error.message);
+                document.getElementById('postsList').innerHTML = '<div class="empty-message">게시글을 불러올 수 없습니다.</div>';
+            }
+        }
+        
+        // Firebase에 게시글 추가하기
+        async function addPost(author, title, content) {
+            try {
+                if (!window.firebaseDB) {
+                    showError('Firebase가 초기화되지 않았습니다. Firebase 설정을 확인해주세요.');
+                    return;
+                }
+                
+                const postsRef = window.firebaseCollection(window.firebaseDB, 'posts');
+                const now = new Date();
+                
+                await window.firebaseAddDoc(postsRef, {
+                    author: author,
+                    title: title,
+                    content: content,
+                    date: now.toLocaleString('ko-KR'),
+                    timestamp: now
+                });
+                
+                // 실시간 업데이트를 위해 다시 로드
+                await loadPosts();
+            } catch (error) {
+                console.error('게시글 추가 오류:', error);
+                showError('게시글 작성 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+        
+        // Firebase에서 게시글 삭제하기
+        async function deletePost(id) {
+            if (!confirm('정말 삭제하시겠습니까?')) {
+                return;
+            }
+            
+            try {
+                if (!window.firebaseDB) {
+                    showError('Firebase가 초기화되지 않았습니다.');
+                    return;
+                }
+                
+                const postRef = window.firebaseDoc(window.firebaseDB, 'posts', id);
+                await window.firebaseDeleteDoc(postRef);
+                
+                // 실시간 업데이트를 위해 다시 로드
+                await loadPosts();
+            } catch (error) {
+                console.error('게시글 삭제 오류:', error);
+                showError('게시글 삭제 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+        
+        // 삭제 버튼에 이벤트 리스너 추가 (이벤트 위임 사용)
+        let deleteHandler = null;
+        
+        function attachDeleteListeners() {
+            const postsList = document.getElementById('postsList');
+            if (!postsList) return;
+            
+            // 기존 리스너가 있으면 제거 (중복 방지)
+            if (deleteHandler) {
+                postsList.removeEventListener('click', deleteHandler);
+            }
+            
+            // 이벤트 위임: postsList 컨테이너에 단일 리스너 추가
+            deleteHandler = function(e) {
+                // 클릭된 요소가 삭제 버튼인지 확인
+                if (e.target.classList.contains('delete-btn')) {
+                    const postId = e.target.getAttribute('data-post-id');
+                    if (postId) {
+                        deletePost(postId);
+                    }
+                }
+            };
+            
+            postsList.addEventListener('click', deleteHandler);
         }
         
         // 폼 제출 이벤트
-        document.getElementById('postForm').addEventListener('submit', function(e) {
+        document.getElementById('postForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const author = document.getElementById('author').value.trim();
@@ -290,16 +459,63 @@
             const content = document.getElementById('content').value.trim();
             
             if (author && title && content) {
-                addPost(author, title, content);
+                const submitBtn = this.querySelector('.submit-btn');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = '작성 중...';
+                submitBtn.disabled = true;
+                
+                await addPost(author, title, content);
+                
                 // 폼 초기화
                 document.getElementById('postForm').reset();
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                
                 // 스크롤을 게시글 목록으로 이동
                 document.querySelector('.posts-container').scrollIntoView({ behavior: 'smooth' });
             }
         });
         
-        // 페이지 로드 시 게시글 목록 표시
-        renderPosts();
+        // Firebase 초기화 대기 후 게시글 로드
+        // Firebase 모듈이 로드될 때까지 대기
+        let loadAttempts = 0;
+        const maxAttempts = 20; // 최대 10초 대기
+        
+        function waitForFirebase() {
+            if (window.firebaseDB && window.firebaseInitialized) {
+                loadPosts();
+                // 실시간 업데이트 설정
+                try {
+                    const postsRef = window.firebaseCollection(window.firebaseDB, 'posts');
+                    const q = window.firebaseQuery(postsRef, window.firebaseOrderBy('timestamp', 'desc'));
+                    window.firebaseOnSnapshot(q, (snapshot) => {
+                        loadPosts();
+                    });
+                } catch (error) {
+                    console.error('실시간 업데이트 설정 오류:', error);
+                    // 실시간 업데이트 실패해도 일반 로드는 계속
+                    loadPosts();
+                }
+            } else if (loadAttempts < maxAttempts) {
+                loadAttempts++;
+                setTimeout(waitForFirebase, 500);
+            } else {
+                // Firebase가 초기화되지 않았거나 설정이 안 된 경우
+                if (!window.firebaseInitialized) {
+                    showConfigNotice();
+                    document.getElementById('postsList').innerHTML = '<div class="empty-message">Firebase 설정이 필요합니다. FIREBASE_SETUP.md 파일을 참고하세요.</div>';
+                } else {
+                    showError('Firebase 연결에 실패했습니다. 설정을 확인해주세요.');
+                }
+            }
+        }
+        
+        // 페이지 로드 시 게시글 목록 표시 및 이벤트 리스너 초기화
+        window.addEventListener('DOMContentLoaded', function() {
+            // 삭제 버튼 이벤트 리스너 초기화 (이벤트 위임)
+            attachDeleteListeners();
+            setTimeout(waitForFirebase, 500);
+        });
     </script>
 </body>
 </html>
