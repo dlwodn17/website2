@@ -8,7 +8,8 @@ class NavigationBar {
             { name: 'Musike', href: 'Musike_page.html' },
             { name: 'Techne', href: 'Techne_page.html' },
             { name: 'SNS', href: 'SNS.html' },
-            { name: 'Info', href: 'Info.html' }
+            { name: 'Info', href: 'Info.html' },
+            { name: 'Board', href: 'Board.html' }
         ];
         this.activePage = activePage;
         this.activeBackgroundColor = 'rgb(230, 230, 230)';

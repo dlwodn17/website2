@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GyeonChilll's Room</title>
+    <link rel="icon" href="image/home_logo2.png">
+    <link rel="stylesheet" href="index.css">
+    <script src="navigation.js"></script>
+    
+    <!-- Google Analytics 태그 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XWWBCPB03C"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XWWBCPB03C');
+    </script>
+    
+    <style>
+        .board-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .board-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .write-form {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .write-form h2 {
+            margin-top: 0;
+            color: whitesmoke;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: whitesmoke;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-family: 'suite_medium';
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .submit-btn {
+            background-color: #361278;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'suite_medium';
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background-color: #4a1a9f;
+        }
+        
+        .posts-container {
+            margin-top: 30px;
+        }
+        
+        .post-item {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s;
+        }
+        
+        .post-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .post-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: whitesmoke;
+            margin: 0;
+        }
+        
+        .post-meta {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .post-content {
+            color: whitesmoke;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'suite_medium';
+        }
+        
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .empty-message {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 40px;
+            font-size: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .board-container {
+                padding: 10px;
+            }
+            
+            .post-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .delete-btn {
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // 네비게이션 바 생성 및 삽입
+        const nav = new NavigationBar('Board.html');
+        nav.insertToBody();
+    </script>
+    
+    <div class="content">
+        <div class="board-container">
+            <div class="board-header">
+                <h1>게시판</h1>
+                <p>자유롭게 글을 작성하고 공유하세요!</p>
+            </div>
+            
+            <!-- 글 작성 폼 -->
+            <div class="write-form">
+                <h2>새 글 작성</h2>
+                <form id="postForm">
+                    <div class="form-group">
+                        <label for="author">작성자</label>
+                        <input type="text" id="author" name="author" placeholder="작성자 이름을 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="title">제목</label>
+                        <input type="text" id="title" name="title" placeholder="글 제목을 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="content">내용</label>
+                        <textarea id="content" name="content" placeholder="글 내용을 입력하세요" required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">글 작성</button>
+                </form>
+            </div>
+            
+            <!-- 게시글 목록 -->
+            <div class="posts-container">
+                <h2 style="color: whitesmoke; margin-bottom: 20px;">게시글 목록</h2>
+                <div id="postsList"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 게시글 데이터를 로컬 스토리지에서 관리
+        const STORAGE_KEY = 'board_posts';
+        
+        // 게시글 목록 가져오기
+        function getPosts() {
+            const posts = localStorage.getItem(STORAGE_KEY);
+            return posts ? JSON.parse(posts) : [];
+        }
+        
+        // 게시글 목록 저장하기
+        function savePosts(posts) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+        }
+        
+        // 게시글 추가하기
+        function addPost(author, title, content) {
+            const posts = getPosts();
+            const newPost = {
+                id: Date.now(), // 고유 ID 생성
+                author: author,
+                title: title,
+                content: content,
+                date: new Date().toLocaleString('ko-KR')
+            };
+            posts.unshift(newPost); // 최신 글이 위에 오도록
+            savePosts(posts);
+            renderPosts();
+        }
+        
+        // 게시글 삭제하기
+        function deletePost(id) {
+            if (confirm('정말 삭제하시겠습니까?')) {
+                const posts = getPosts();
+                const filteredPosts = posts.filter(post => post.id !== id);
+                savePosts(filteredPosts);
+                renderPosts();
+            }
+        }
+        
+        // 게시글 목록 렌더링
+        function renderPosts() {
+            const posts = getPosts();
+            const postsList = document.getElementById('postsList');
+            
+            if (posts.length === 0) {
+                postsList.innerHTML = '<div class="empty-message">아직 작성된 글이 없습니다. 첫 번째 글을 작성해보세요!</div>';
+                return;
+            }
+            
+            postsList.innerHTML = posts.map(post => `
+                <div class="post-item">
+                    <div class="post-header">
+                        <div>
+                            <h3 class="post-title">${escapeHtml(post.title)}</h3>
+                            <div class="post-meta">작성자: ${escapeHtml(post.author)} | 작성일: ${post.date}</div>
+                        </div>
+                        <button class="delete-btn" onclick="deletePost(${post.id})">삭제</button>
+                    </div>
+                    <div class="post-content">${escapeHtml(post.content)}</div>
+                </div>
+            `).join('');
+        }
+        
+        // XSS 방지를 위한 HTML 이스케이프
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 폼 제출 이벤트
+        document.getElementById('postForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const author = document.getElementById('author').value.trim();
+            const title = document.getElementById('title').value.trim();
+            const content = document.getElementById('content').value.trim();
+            
+            if (author && title && content) {
+                addPost(author, title, content);
+                // 폼 초기화
+                document.getElementById('postForm').reset();
+                // 스크롤을 게시글 목록으로 이동
+                document.querySelector('.posts-container').scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+        
+        // 페이지 로드 시 게시글 목록 표시
+        renderPosts();
+    </script>
+</body>
+</html>
+
