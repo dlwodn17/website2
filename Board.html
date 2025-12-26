@@ -12,6 +12,7 @@
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     
     <script type="module">
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import {
           getFirestore,
@@ -38,8 +39,19 @@
         try {
           const app = initializeApp(firebaseConfig);
           const db = getFirestore(app);
+          const auth = getAuth(app);
+
+        // 익명 로그인 실행 (방문자에게 UID 부여)
+          signInAnonymously(auth)
+            .then(() => {
+                console.log("익명 로그인 성공!");
+            })
+            .catch((error) => {
+                console.error("익명 로그인 실패:", error);
+            });
       
           window.firebaseDB = db;
+          window.firebaseAuth = auth;
           window.firebaseCollection = collection;
           window.firebaseAddDoc = addDoc;
           window.firebaseGetDocs = getDocs;
@@ -328,24 +340,39 @@
         // 게시글 목록 렌더링
         function renderPosts(posts) {
             const postsList = document.getElementById('postsList');
+            const currentUser = window.firebaseAuth.currentUser;
+            const adminUid = "O7Bhjx4WkIS0pbfkvH9lbAtajds2"; // 관리자 UID
             
             if (!posts || posts.length === 0) {
                 postsList.innerHTML = '<div class="empty-message">아직 작성된 글이 없습니다. 첫 번째 글을 작성해보세요!</div>';
                 return;
             }
             
-            postsList.innerHTML = posts.map(post => `
-                <div class="post-item">
-                    <div class="post-header">
-                        <div>
-                            <h3 class="post-title">${escapeHtml(post.title)}</h3>
-                            <div class="post-meta">작성자: ${escapeHtml(post.author)} | 작성일: ${post.date}</div>
-                        </div>
-                        <button class="delete-btn" data-post-id="${escapeHtml(post.id)}">삭제</button>
+            postsList.innerHTML = posts.map(post => {
+                // --- 권한 확인 로직 ---
+                // 1. 내가 관리자인가?
+                const isAdmin = currentUser && currentUser.uid === adminUid;
+                // 2. 내가 이 글을 쓴 사람인가? (글에 저장된 uid와 내 uid 비교)
+                const isOwner = currentUser && post.uid === currentUser.uid;
+                
+                // 관리자이거나 작성자일 때만 삭제 버튼 코드를 생성하고, 아니면 빈 문자열('')을 만듭니다.
+                const deleteBtnHtml = (isAdmin || isOwner) 
+                    ? `<button class="delete-btn" data-post-id="${escapeHtml(post.id)}">삭제</button>` 
+                    : '';
+                // ----------------------------
+
+                return `
+                    <div class="post-item">
+                        <div class="post-header">
+                            <div>
+                                <h3 class="post-title">${escapeHtml(post.title)}</h3>
+                                <div class="post-meta">작성자: ${escapeHtml(post.author)} | 작성일: ${post.date}</div>
+                            </div>
+                            ${deleteBtnHtml} </div>
+                        <div class="post-content">${escapeHtml(post.content)}</div>
                     </div>
-                    <div class="post-content">${escapeHtml(post.content)}</div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             
             // 삭제 버튼에 이벤트 리스너 추가 (이벤트 위임 사용)
             attachDeleteListeners();
@@ -372,7 +399,8 @@
                         author: data.author,
                         title: data.title,
                         content: data.content,
-                        date: data.date || new Date(data.timestamp?.toDate()).toLocaleString('ko-KR')
+                        date: data.date || new Date(data.timestamp?.toDate()).toLocaleString('ko-KR'),
+                        uid: data.uid
                     });
                 });
                 
@@ -395,11 +423,16 @@
                 
                 const postsRef = window.firebaseCollection(window.firebaseDB, 'posts');
                 const now = new Date();
+
+                const currentUser = window.firebaseAuth.currentUser;
+                // 사용자가 있다면 그 사용자의 고유 ID(uid)를 가져오고, 없다면 null을 넣습니다.
+                const userUid = currentUser ? currentUser.uid : null;
                 
                 await window.firebaseAddDoc(postsRef, {
                     author: author,
                     title: title,
                     content: content,
+                    uid: userUid,
                     date: now.toLocaleString('ko-KR'),
                     timestamp: now
                 });
