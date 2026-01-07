@@ -12,7 +12,13 @@
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     
     <script type="module">
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { 
+          getAuth, 
+          onAuthStateChanged,
+          signInWithEmailAndPassword,
+          createUserWithEmailAndPassword,
+          signOut
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import {
           getFirestore,
@@ -40,15 +46,6 @@
           const app = initializeApp(firebaseConfig);
           const db = getFirestore(app);
           const auth = getAuth(app);
-
-        // 익명 로그인 실행 (방문자에게 UID 부여)
-          signInAnonymously(auth)
-            .then(() => {
-                console.log("익명 로그인 성공!");
-            })
-            .catch((error) => {
-                console.error("익명 로그인 실패:", error);
-            });
       
           window.firebaseDB = db;
           window.firebaseAuth = auth;
@@ -61,6 +58,15 @@
           window.firebaseOrderBy = orderBy;
           window.firebaseOnSnapshot = onSnapshot;
           window.firebaseInitialized = true;
+      
+          // 인증 관련 모듈 메서드를 전역에 노출
+          window.firebaseAuthModule = {
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged,
+            auth
+          };
       
           console.log("Firebase 초기화 완료");
         } catch (error) {
@@ -242,6 +248,47 @@
             margin-bottom: 20px;
             border: 1px solid rgba(255, 193, 7, 0.5);
         }
+
+        .auth-panel {
+            background-color: rgba(0, 0, 0, 0.25);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: whitesmoke;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .auth-panel input[type="email"],
+        .auth-panel input[type="password"] {
+            padding: 6px 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-family: 'suite_medium';
+            font-size: 13px;
+        }
+        
+        .auth-panel button {
+            background-color: #361278;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-family: 'suite_medium';
+            font-size: 13px;
+        }
+        
+        .auth-panel button:hover {
+            background-color: #4a1a9f;
+        }
+        
+        .auth-status {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
         
         @media (max-width: 768px) {
             .board-container {
@@ -276,6 +323,15 @@
             <!-- 글 작성 폼 -->
             <div class="write-form">
                 <h2>새 글 작성</h2>
+                <!-- 이메일 로그인 패널 -->
+                <div class="auth-panel">
+                    <span class="auth-status" id="authStatus">로그인되지 않았습니다.</span>
+                    <input type="email" id="loginEmail" placeholder="이메일" autocomplete="email">
+                    <input type="password" id="loginPassword" placeholder="비밀번호" autocomplete="current-password">
+                    <button type="button" id="loginButton">로그인</button>
+                    <button type="button" id="signupButton">회원가입</button>
+                    <button type="button" id="logoutButton" style="display:none;">로그아웃</button>
+                </div>
                 <form id="postForm">
                     <div class="form-group">
                         <label for="author">작성자</label>
@@ -501,6 +557,13 @@
             const author = document.getElementById('author').value.trim();
             const title = document.getElementById('title').value.trim();
             const content = document.getElementById('content').value.trim();
+
+            // 로그인 여부 확인
+            const currentUser = window.firebaseAuth && window.firebaseAuth.currentUser;
+            if (!currentUser) {
+                showError('글 작성은 이메일 로그인 후 가능합니다. 상단 로그인 폼을 이용해 로그인해 주세요.');
+                return;
+            }
             
             // Turnstile 토큰 확인
             const turnstileResponse = document.querySelector('input[name="cf-turnstile-response"]');
@@ -510,19 +573,15 @@
             }
             
             if (author && title && content) {
-                const submitBtn = this.querySelector('.submit-btn');
-                const originalText = submitBtn.textContent;
-                submitBtn.textContent = '작성 중...';
+                const submitBtn = this.querySelector('button[type="submit"]');
                 submitBtn.disabled = true;
                 
                 await addPost(author, title, content);
                 
-                // 폼 초기화 및 Turnstile 리셋
-                document.getElementById('postForm').reset();
+                this.reset();
                 if (window.turnstile) {
-                    window.turnstile.reset();
+                    window.turnstile.reset();  // Turnstile 토큰 초기화
                 }
-                submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
                 
                 // 스크롤을 게시글 목록으로 이동
@@ -566,6 +625,89 @@
         
         // 페이지 로드 시 게시글 목록 표시 및 이벤트 리스너 초기화
         window.addEventListener('DOMContentLoaded', function() {
+            // 로그인/회원가입/로그아웃 버튼 이벤트
+            const loginBtn = document.getElementById('loginButton');
+            const signupBtn = document.getElementById('signupButton');
+            const logoutBtn = document.getElementById('logoutButton');
+            const emailInput = document.getElementById('loginEmail');
+            const passwordInput = document.getElementById('loginPassword');
+            const authStatus = document.getElementById('authStatus');
+
+            function updateAuthUI(user) {
+                if (!authStatus || !logoutBtn) return;
+                if (user) {
+                    authStatus.textContent = `${user.email || '로그인됨'} 상태입니다.`;
+                    logoutBtn.style.display = 'inline-block';
+                } else {
+                    authStatus.textContent = '로그인되지 않았습니다.';
+                    logoutBtn.style.display = 'none';
+                }
+            }
+
+            if (window.firebaseAuthModule && window.firebaseAuthModule.onAuthStateChanged) {
+                window.firebaseAuthModule.onAuthStateChanged(window.firebaseAuthModule.auth, (user) => {
+                    updateAuthUI(user);
+                });
+            }
+
+            if (loginBtn) {
+                loginBtn.addEventListener('click', async () => {
+                    if (!window.firebaseAuthModule) {
+                        showError('Firebase 인증 모듈이 초기화되지 않았습니다.');
+                        return;
+                    }
+                    const email = emailInput.value.trim();
+                    const password = passwordInput.value.trim();
+                    if (!email || !password) {
+                        showError('이메일과 비밀번호를 모두 입력해 주세요.');
+                        return;
+                    }
+                    try {
+                        await window.firebaseAuthModule.signInWithEmailAndPassword(window.firebaseAuthModule.auth, email, password);
+                        showError(''); // 에러 영역 초기화
+                    } catch (err) {
+                        showError('로그인 실패: ' + err.message);
+                    }
+                });
+            }
+
+            if (signupBtn) {
+                signupBtn.addEventListener('click', async () => {
+                    if (!window.firebaseAuthModule) {
+                        showError('Firebase 인증 모듈이 초기화되지 않았습니다.');
+                        return;
+                    }
+                    const email = emailInput.value.trim();
+                    const password = passwordInput.value.trim();
+                    if (!email || !password) {
+                        showError('이메일과 비밀번호를 모두 입력해 주세요.');
+                        return;
+                    }
+                    if (password.length < 6) {
+                        showError('비밀번호는 최소 6자 이상이어야 합니다.');
+                        return;
+                    }
+                    try {
+                        await window.firebaseAuthModule.createUserWithEmailAndPassword(window.firebaseAuthModule.auth, email, password);
+                        showError('회원가입 및 로그인 완료되었습니다.');
+                    } catch (err) {
+                        showError('회원가입 실패: ' + err.message);
+                    }
+                });
+            }
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    if (!window.firebaseAuthModule) return;
+                    try {
+                        await window.firebaseAuthModule.signOut(window.firebaseAuthModule.auth);
+                        showError('로그아웃 되었습니다.');
+                    } catch (err) {
+                        showError('로그아웃 실패: ' + err.message);
+                    }
+                });
+            }
+
             // 삭제 버튼 이벤트 리스너 초기화 (이벤트 위임)
             attachDeleteListeners();
             setTimeout(waitForFirebase, 500);
