@@ -664,6 +664,10 @@
             if (window.firebaseAuthModule && window.firebaseAuthModule.onAuthStateChanged) {
                 window.firebaseAuthModule.onAuthStateChanged(window.firebaseAuthModule.auth, (user) => {
                     updateAuthUI(user);
+                    // 인증 상태 변경 시 게시글 목록 재렌더링
+                    if (window.firebaseDB && window.firebaseInitialized) {
+                        loadPosts();
+                    }
                 });
             }
 
@@ -679,6 +683,10 @@
                             window.firebaseAuthModule.googleProvider
                         );
                         showError(''); // 에러 영역 초기화
+                        // 로그인 성공 후 게시글 목록 재렌더링
+                        if (window.firebaseDB && window.firebaseInitialized) {
+                            await loadPosts();
+                        }
                     } catch (err) {
                         console.error('Google 로그인 오류:', err);
                         if (err.code === 'auth/popup-closed-by-user') {
@@ -693,9 +701,19 @@
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async () => {
                     if (!window.firebaseAuthModule) return;
+                    
+                    // 로그아웃 확인 팝업
+                    if (!confirm('로그아웃 하시겠습니까?')) {
+                        return;
+                    }
+                    
                     try {
                         await window.firebaseAuthModule.signOut(window.firebaseAuthModule.auth);
                         showError(''); // 에러 영역 초기화
+                        // 로그아웃 성공 후 게시글 목록 재렌더링
+                        if (window.firebaseDB && window.firebaseInitialized) {
+                            await loadPosts();
+                        }
                     } catch (err) {
                         showError('로그아웃 실패: ' + err.message);
                     }
