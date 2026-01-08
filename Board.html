@@ -61,6 +61,11 @@
       
           // 인증 관련 모듈 메서드를 전역에 노출
           const googleProvider = new GoogleAuthProvider();
+          // 로그인 팝업 창에서 계정 선택 옵션 추가
+          googleProvider.setCustomParameters({
+            prompt: 'select_account'
+          });
+
           window.firebaseAuthModule = {
             signInWithPopup,
             GoogleAuthProvider,
