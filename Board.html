@@ -15,8 +15,8 @@
         import { 
           getAuth, 
           onAuthStateChanged,
-          signInWithEmailAndPassword,
-          createUserWithEmailAndPassword,
+          signInWithPopup,
+          GoogleAuthProvider,
           signOut
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -60,9 +60,11 @@
           window.firebaseInitialized = true;
       
           // 인증 관련 모듈 메서드를 전역에 노출
+          const googleProvider = new GoogleAuthProvider();
           window.firebaseAuthModule = {
-            signInWithEmailAndPassword,
-            createUserWithEmailAndPassword,
+            signInWithPopup,
+            GoogleAuthProvider,
+            googleProvider,
             signOut,
             onAuthStateChanged,
             auth
@@ -261,28 +263,43 @@
             gap: 10px;
         }
         
-        .auth-panel input[type="email"],
-        .auth-panel input[type="password"] {
-            padding: 6px 8px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            font-family: 'suite_medium';
-            font-size: 13px;
-        }
-        
         .auth-panel button {
             background-color: #361278;
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 6px 10px;
+            padding: 8px 15px;
             cursor: pointer;
             font-family: 'suite_medium';
-            font-size: 13px;
+            font-size: 14px;
+            transition: background-color 0.3s;
         }
         
         .auth-panel button:hover {
             background-color: #4a1a9f;
+        }
+        
+        .google-login-btn {
+            background-color: #4285f4 !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .google-login-btn:hover {
+            background-color: #357ae8 !important;
+        }
+        
+        .google-icon {
+            width: 18px;
+            height: 18px;
+            background-color: white;
+            border-radius: 2px;
+            display: inline-block;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%234285f4' d='M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z'/%3E%3Cpath fill='%2334a853' d='M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z'/%3E%3Cpath fill='%23fbbc05' d='M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z'/%3E%3Cpath fill='%23ea4335' d='M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
         }
         
         .auth-status {
@@ -323,13 +340,13 @@
             <!-- 글 작성 폼 -->
             <div class="write-form">
                 <h2>새 글 작성</h2>
-                <!-- 이메일 로그인 패널 -->
+                <!-- Google 로그인 패널 -->
                 <div class="auth-panel">
                     <span class="auth-status" id="authStatus">로그인되지 않았습니다.</span>
-                    <input type="email" id="loginEmail" placeholder="이메일" autocomplete="email">
-                    <input type="password" id="loginPassword" placeholder="비밀번호" autocomplete="current-password">
-                    <button type="button" id="loginButton">로그인</button>
-                    <button type="button" id="signupButton">회원가입</button>
+                    <button type="button" id="googleLoginButton" class="google-login-btn">
+                        <span class="google-icon"></span>
+                        Google 계정으로 로그인
+                    </button>
                     <button type="button" id="logoutButton" style="display:none;">로그아웃</button>
                 </div>
                 <form id="postForm">
@@ -561,7 +578,7 @@
             // 로그인 여부 확인
             const currentUser = window.firebaseAuth && window.firebaseAuth.currentUser;
             if (!currentUser) {
-                showError('글 작성은 이메일 로그인 후 가능합니다. 상단 로그인 폼을 이용해 로그인해 주세요.');
+                showError('글 작성은 Google 로그인 후 가능합니다. 상단 로그인 버튼을 이용해 로그인해 주세요.');
                 return;
             }
             
@@ -625,21 +642,21 @@
         
         // 페이지 로드 시 게시글 목록 표시 및 이벤트 리스너 초기화
         window.addEventListener('DOMContentLoaded', function() {
-            // 로그인/회원가입/로그아웃 버튼 이벤트
-            const loginBtn = document.getElementById('loginButton');
-            const signupBtn = document.getElementById('signupButton');
+            // Google 로그인/로그아웃 버튼 이벤트
+            const googleLoginBtn = document.getElementById('googleLoginButton');
             const logoutBtn = document.getElementById('logoutButton');
-            const emailInput = document.getElementById('loginEmail');
-            const passwordInput = document.getElementById('loginPassword');
             const authStatus = document.getElementById('authStatus');
 
             function updateAuthUI(user) {
-                if (!authStatus || !logoutBtn) return;
+                if (!authStatus || !logoutBtn || !googleLoginBtn) return;
                 if (user) {
-                    authStatus.textContent = `${user.email || '로그인됨'} 상태입니다.`;
+                    const displayName = user.displayName || user.email || '사용자';
+                    authStatus.textContent = `${displayName}님으로 로그인되어 있습니다.`;
+                    googleLoginBtn.style.display = 'none';
                     logoutBtn.style.display = 'inline-block';
                 } else {
                     authStatus.textContent = '로그인되지 않았습니다.';
+                    googleLoginBtn.style.display = 'inline-flex';
                     logoutBtn.style.display = 'none';
                 }
             }
@@ -650,48 +667,25 @@
                 });
             }
 
-            if (loginBtn) {
-                loginBtn.addEventListener('click', async () => {
+            if (googleLoginBtn) {
+                googleLoginBtn.addEventListener('click', async () => {
                     if (!window.firebaseAuthModule) {
                         showError('Firebase 인증 모듈이 초기화되지 않았습니다.');
                         return;
                     }
-                    const email = emailInput.value.trim();
-                    const password = passwordInput.value.trim();
-                    if (!email || !password) {
-                        showError('이메일과 비밀번호를 모두 입력해 주세요.');
-                        return;
-                    }
                     try {
-                        await window.firebaseAuthModule.signInWithEmailAndPassword(window.firebaseAuthModule.auth, email, password);
+                        await window.firebaseAuthModule.signInWithPopup(
+                            window.firebaseAuthModule.auth, 
+                            window.firebaseAuthModule.googleProvider
+                        );
                         showError(''); // 에러 영역 초기화
                     } catch (err) {
-                        showError('로그인 실패: ' + err.message);
-                    }
-                });
-            }
-
-            if (signupBtn) {
-                signupBtn.addEventListener('click', async () => {
-                    if (!window.firebaseAuthModule) {
-                        showError('Firebase 인증 모듈이 초기화되지 않았습니다.');
-                        return;
-                    }
-                    const email = emailInput.value.trim();
-                    const password = passwordInput.value.trim();
-                    if (!email || !password) {
-                        showError('이메일과 비밀번호를 모두 입력해 주세요.');
-                        return;
-                    }
-                    if (password.length < 6) {
-                        showError('비밀번호는 최소 6자 이상이어야 합니다.');
-                        return;
-                    }
-                    try {
-                        await window.firebaseAuthModule.createUserWithEmailAndPassword(window.firebaseAuthModule.auth, email, password);
-                        showError('회원가입 및 로그인 완료되었습니다.');
-                    } catch (err) {
-                        showError('회원가입 실패: ' + err.message);
+                        console.error('Google 로그인 오류:', err);
+                        if (err.code === 'auth/popup-closed-by-user') {
+                            showError('로그인 팝업이 닫혔습니다. 다시 시도해주세요.');
+                        } else {
+                            showError('Google 로그인 실패: ' + err.message);
+                        }
                     }
                 });
             }
@@ -701,7 +695,7 @@
                     if (!window.firebaseAuthModule) return;
                     try {
                         await window.firebaseAuthModule.signOut(window.firebaseAuthModule.auth);
-                        showError('로그아웃 되었습니다.');
+                        showError(''); // 에러 영역 초기화
                     } catch (err) {
                         showError('로그아웃 실패: ' + err.message);
                     }
