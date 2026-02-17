@@ -93,6 +93,30 @@ body
 .melon-link:focus {
   color: whitesmoke !important;
 }
+
+.youtube-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: whitesmoke !important;
+}
+.youtube-link::before {
+  content: '';
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  background: url('image/youtube_logo.png') no-repeat center center / contain;
+}
+.youtube-link:link,
+.youtube-link:visited {
+  color: whitesmoke !important;
+}
+.youtube-link:hover,
+.youtube-link:active,
+.youtube-link:focus {
+  color: whitesmoke !important;
+}
+
         /*.image{margin: 0 0 0 30px;}
         .text{margin: 30px 30px;}*/
         a:link {text-decoration: none; color:black;}
